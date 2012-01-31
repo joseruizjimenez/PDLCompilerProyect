@@ -1,0 +1,81 @@
+/* ---DECLARACIONES DE PACKAGE E IMPORTS--- */
+package pdlcompilerproyect;
+
+import java.io.*;
+import java_cup.runtime.*;
+import java.util.HashMap;
+
+/* ---COMPONENTES DE CODIGO DE USUARIO--- */
+action code{:
+    /* Para el siguiente incremento de la practica... */
+    HashMap<String,Symbol> tablaSimbolos = new HashMap<String,Symbol>();
+:};
+
+parser code {:
+    public void report_error(String message, Object info) {
+       	StringBuffer m = new StringBuffer("Error sintactico");
+	if(info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s=((Symbol) info);
+            /* Comprueba si el numero de línea es mayor o igual que cero */
+            if(s.left >= 0) {
+                m.append(" en linea "+(s.left+1));
+		/* Comprueba si el numero de columna es mayor o igual que cero */
+		if (s.right >= 0)
+                    m.append(", y columna "+(s.right+1));
+                if (s.sym >=0) {                
+                    m.append(" por el simbolo \""+(Utility.getSymbol(s.sym)) +
+                        "\" : la sintaxis no es correcta");
+                }
+            }
+	}
+	System.err.println(m);
+        System.exit(0);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+       	report_error(message, info);
+	System.exit(1);
+    }
+
+    public static void main (String[] args) throws Exception {
+        if (args.length == 0) 
+	    new parser(new AnalizadorMorfologico(System.in)).parse();
+        else {
+            InputStream inputStream = new ByteArrayInputStream(args[0].getBytes());
+            new parser(new AnalizadorMorfologico(inputStream)).parse();
+        }
+    }
+
+    /* ---OTRAS FUNCIONES AUXILIARES EN EL FICHERO: Utility.java--- */
+:};
+
+/* ---LISTA DE SIMBOLOS DE LA GRAMATICA--- */
+terminal String PROGRAMA, IF, ELSE, WHILE,  FOR, CTE_BOOLEANA, NUM_OCT, NUM_HEX,
+        NUM_BIN, FLOAT, SCANF, PRINTF, CPRINTF, SEMI, COMA, PUNTOS, MAS, MENOS, ENTRE,
+        ASTERISCO, AND, OR, NOT, LEFT_LLAVE, RIGHT_LLAVE, LEFT_PAREN, RIGHT_PAREN,
+        ASIGNACION, EQUALS, NOT_EQUALS, GREATER_EQUALS, LESS_EQUALS, LESS, INT,
+        GREATER, ID_VAR, FUNCTION, ARRAY, LEFT_CORCHETE, RIGHT_CORCHETE, RETURN,
+        BOOLEAN, CONSTANTE, OF, MALLOC, FREE, SIZE, CONTAINS, NUM_ENTERO;
+
+terminal Integer NUM_ENTERO;
+terminal Float NUM_REAL;
+
+non terminal Object programa, bloque_declaracion, declaraciones_constante,
+        declaracion_constante, declaraciones, declaracion, clase, clase_escalar,
+        tipo, clase_puntero, clase_vector, clase_matriz, identificadores,
+        funciones, funcion, parametros_funcion, resto_parametros_funcion,
+        parametro_funcion, declaraciones_funcion, sentencias, sentencia,
+        sentencia_simple, bloque, asignacion, elemento_vector, condicional,
+        bucle, lectura, escritura, liberacion, acceso, retorno_funcion,
+        exp, lista_expresiones, resto_lista_expresiones, comparacion,
+        linea;
+
+
+/* ---DECLARACIONES DE LA GRAMATICA (Ejemplo para la siguiente iteracion)--- */
+programa ::= programa linea | linea;
+
+linea ::= NUM_ENTERO:i SEMI {: Utility.printTokenInfo("NUM_ENTERO",ileft+1,iright+1,i); :}
+        |NUM_REAL:f SEMI {: Utility.printTokenInfo("NUM_REAL",fleft+1,fright+1,f); :}
+        |NUM_HEX:h SEMI {: Utility.printTokenInfo("NUM_HEX",hleft+1,hright+1,h); :}
+        |NUM_BIN:b SEMI {: Utility.printTokenInfo("NUM_BIN",bleft+1,bright+1,b); :}
+        |NUM_OCT:o SEMI {: Utility.printTokenInfo("NUM_OCT",oleft+1,oright+1,o); :};
