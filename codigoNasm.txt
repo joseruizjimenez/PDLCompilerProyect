@@ -1,0 +1,170 @@
+_uno resd 1
+
+_dos resd 1
+
+_res resd 1
+
+__aux resd 1 
+__auxElemVector resd 1 
+segment .text 
+global _main 
+extern _print_int, _print_endofline, _scan_int
+
+push dword 1
+
+
+pop dword eax
+mov dword [_uno],eax
+
+push dword 2
+
+
+pop dword eax
+mov dword [_dos],eax
+
+
+push dword _uno
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+
+push dword _dos
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+pop dword eax 
+pop dword ebx 
+add dword eax,ebx 
+push dword eax
+
+
+pop dword eax
+mov dword [_res],eax
+
+
+push dword _dos
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+
+push dword _uno
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+pop dword ebx 
+pop dword eax 
+sub dword eax,ebx 
+push dword eax
+
+
+pop dword eax
+mov dword [_res],eax
+
+
+push dword _uno
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+
+push dword _dos
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+pop dword eax 
+pop dword ebx 
+imul dword eax,ebx 
+push dword eax
+
+
+pop dword eax
+mov dword [_res],eax
+
+
+push dword _dos
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+
+push dword _uno
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+pop dword ebx 
+pop dword eax 
+cdq 
+idiv dword ebx 
+push dword eax
+
+
+pop dword eax
+mov dword [_res],eax
+
+
+push dword _res
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+push dword 3
+
+pop dword eax 
+pop dword ebx 
+cmp eax,ebx 
+jne near distinto_1 
+push dword 0 
+jmp fin_distinto_1
+distinto_1: push dword 1 
+ fin_distinto_1: 
+
+condicional_1: pop dword eax 
+mov dword ebx,0 
+cmp eax,ebx 
+je near ppio_else_1
+
+
+push dword _res
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+push dword 1
+
+pop dword eax 
+pop dword ebx 
+add dword eax,ebx 
+push dword eax
+
+
+pop dword eax
+mov dword [_res],eax
+
+jmp near fin_condicional_1
+ppio_else_1 :
+
+push dword _res
+pop dword eax
+mov dword eax,[eax]
+push dword eax
+
+push dword 3
+
+pop dword eax 
+pop dword ebx 
+add dword eax,ebx 
+push dword eax
+
+
+pop dword eax
+mov dword [_res],eax
+
+fin_condicional_1: 
+
+ret

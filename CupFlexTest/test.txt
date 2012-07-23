@@ -1,0 +1,23 @@
+program {
+	int uno;
+	int dos,res;
+	
+	uno = 1;
+	dos = 2;
+	
+	res = uno + dos;
+
+	res = dos - uno;
+	
+	res = uno * dos;
+	
+	res = dos / uno;
+   	
+	
+        if(res != 3){
+            res = res + 1;
+        }else{
+            res= res + 3;
+        }
+
+}

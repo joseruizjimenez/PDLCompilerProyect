@@ -1,0 +1,573 @@
+
+package compilador;
+
+import java_cup.runtime.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Stack;
+import compilador.SimboloSemantico.Tipo;
+
+
+action code{:
+		HashMap<String,SimboloSemantico> tablaSimbolos = new HashMap<String,SimboloSemantico>();
+        
+		int contadorIgual = 1;
+        int contadorDistinto = 1;
+        Stack<Integer> pilaIf = new Stack<Integer>(); 
+        int contadorIf = 1;
+ 
+:};
+
+
+
+parser code {:
+    public static void main (String[] args) throws Exception {
+        if (args.length == 0) 
+	    new parser(new AnalizadorMorfologico(System.in)).parse();
+        else {
+            InputStream inputStream = new ByteArrayInputStream(args[0].getBytes());
+            new parser(new AnalizadorMorfologico(inputStream)).parse();
+        }
+    }
+
+    
+
+	 public void report_error(String message, Object info) {
+   
+        StringBuffer m = new StringBuffer("ERROR:");
+   
+        
+        if (info instanceof java_cup.runtime.Symbol) {
+            
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+   
+            
+            if (s.left >= 0) {                
+                
+                m.append(" se encontro un fallo en la linea "+(s.left+1));   
+                
+                if (s.right >= 0)                    
+                    
+                    m.append(" y columna "+(s.right+1));
+            
+            if (s.sym >=0)
+                
+                m.append(" por el simbolo \""+(getSimbolo(info)) + "\" : la sintaxis no es correcta");
+            }
+        }
+	    System.out.println(m);
+            System.exit(0);
+    }
+   
+
+   public String getSimbolo (Object info){
+
+       java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+       String simbolo="UNDEFINED";
+
+       switch(s.sym){
+
+        case 0: simbolo= "EOF";
+            break;
+
+        case 1: simbolo= "ERROR";
+            break;
+
+        case 2: simbolo= "main";
+            break;
+
+        case 3: simbolo= "if";
+            break;
+
+        case 4: simbolo= "else";
+            break;
+
+        case 5: simbolo= "while";
+            break;
+
+        case 6: simbolo= "CTE_BOOLEANA";
+            break;
+
+        case 7: simbolo= "scanf";
+            break;
+
+        case 8: simbolo= "printf";
+            break;
+
+        case 9: simbolo= ";";
+            break;
+
+        case 10: simbolo= ",";
+            break;
+
+        case 11: simbolo= ":";
+            break;
+
+        case 12: simbolo= "+";
+            break;
+
+        case 13: simbolo= "-";
+            break;
+
+        case 14: simbolo= "/";
+            break;
+
+        case 15: simbolo= "*";
+            break;
+
+        case 16: simbolo= "&&";
+            break;
+
+        case 17: simbolo= "||";
+            break;
+
+        case 18: simbolo= "!";
+            break;
+
+        case 19: simbolo= "{";
+            break;
+
+        case 20: simbolo= "}";
+            break;
+
+        case 21: simbolo= "(";
+            break;
+
+        case 22: simbolo= ")";
+            break;
+
+        case 23: simbolo= "=";
+            break;
+
+        case 24: simbolo= "==";
+            break;
+
+        case 25: simbolo= "!=";
+            break;
+
+        case 26: simbolo= ">=";
+            break;
+
+        case 27: simbolo= "<=";
+            break;
+
+        case 28: simbolo= "<";
+            break;
+
+        case 29: simbolo= ">";
+            break;
+
+	case 30: simbolo= "ID_VAR";
+	    break;
+
+        case 31: simbolo= "cprintf";
+            break;
+
+        case 32: simbolo= "function";
+            break;
+
+        case 33: simbolo= "array";
+            break;
+
+        case 34: simbolo= "[";
+            break;
+
+        case 35: simbolo= "]";
+            break;
+
+        case 36: simbolo= "return";
+            break;
+
+        case 37: simbolo="ENTERO";
+            break;
+
+        case 38: simbolo="BOOLEAN";
+            break;
+
+        case 39: simbolo="FLOAT";
+            break;
+
+        case 41: simbolo="INT";
+            break;
+
+	case 42: simbolo="REAL";
+            break;
+
+	case 43: simbolo="REAL_SIN_INT";
+            break;
+
+        case 44: simbolo="REAL_SIN_DEC";
+            break;
+
+    }
+
+       return simbolo;
+   }
+   
+    public void report_fatal_error(String message, Object info) {
+        System.out.println(message);
+    }
+
+:};
+
+
+terminal String           PROGRAM, IF, ELSE, WHILE, CTE_BOOLEANA, CONST,
+			SCANF, PRINTF, SEMI, COMA, PUNTOS, MAS, MENOS, ENTRE, POR,
+			AND, OR, NOT, LEFT_LLAVE, RIGHT_LLAVE,
+			LEFT_PARENTESIS, RIGHT_PARENTESIS, ASIGNACION,
+			EQUALS, NOT_EQUALS, GREATER_EQUALS, LESS_EQUALS, LESS, MALLOC, FREE, SIZE, CONTAINS, 
+			GREATER, ID_VAR, CPRINTF, FUNCTION, ARRAY, LEFT_CORCHETE,
+			RIGHT_CORCHETE,  RETURN, ENTERO, BOOLEAN, FLOAT, FOR;
+
+terminal Integer   	INT;
+terminal Float		REAL, REAL_SIN_INT, REAL_SIN_DEC;
+
+
+non terminal String     programa, declaraciones, sentencias, declaracion,
+			identificadores, sentencia, sentencia_simple,
+			estructura_control, asignacion, lectura, escritura,
+			condicional, condicionalParcial, bucle, comparacion,
+			cte_real, funciones, funcion, declaraciones_funcion,
+			declaracion_funcion, retorno;   
+non terminal Tipo	clase, exp, constante, elemento_vector, tipo_coleccion, tipo, parametro; 
+non terminal ArrayList<Tipo> 	parametros, resto_parametros,lista_expresiones, resto_lista_expresiones;
+
+
+precedence left OR;
+precedence left AND;
+precedence left EQUALS, NOT_EQUALS, GREATER_EQUALS, LESS_EQUALS, LESS, GREATER;
+precedence left ASIGNACION;
+precedence left MAS, MENOS;
+precedence left POR, ENTRE;
+precedence left COMA;
+precedence left NOT;
+precedence left LEFT_PARENTESIS, RIGHT_PARENTESIS, LEFT_LLAVE, RIGHT_LLAVE, LEFT_CORCHETE, RIGHT_CORCHETE;
+
+
+programa	::= PROGRAM:m LEFT_LLAVE:ll declaraciones:d funciones:f sentencias:s RIGHT_LLAVE:rl
+			{:	EscritorFichero.escribir("ret");
+                                RESULT = m + ll + d + f + s + rl;
+				System.out.println("Reduce a programa");
+				
+				:};
+
+declaraciones	::= declaracion:d
+			{:	EscritorFichero.escribir("__aux resd 1 \nsegment .text \nglobal _main "+
+                                    "\nextern _print_int, _print_endofline, _scan_int\n");
+                                RESULT = d;
+				System.out.println("Reduce a declaraciones por declaracion");	:}
+			| declaracion:d declaraciones:dd
+			{:	RESULT = d + dd;
+				System.out.println("Reduce a declaraciones por declaracion declaraciones");	:};
+
+declaracion	::= clase:t identificadores:n SEMI:s
+			{:	RESULT = t +" "+ n + s;
+				String ids[] = n.split(",");
+
+				for(String id: ids){
+					if(tablaSimbolos.containsKey(id)){						
+						System.out.println("Error (fila "+(nleft+1)+",columna "+(nright+1)+"): la variable " + id + " ya ha sido declarada");
+						System.exit(0);
+					}
+					else{
+						if(t == Tipo.INT ){
+                            tablaSimbolos.put(id,new SimboloSemantico(id,t));
+                            EscritorFichero.escribir("_"+id+" resd 1\n");
+                            }
+                        }
+				}
+				System.out.println("Reduce a declaracion");	:};
+
+clase		::= tipo:t
+			{:	RESULT = t;
+				System.out.println("Reduce a clase por tipo");	:}
+			| tipo_coleccion:t
+			{:	RESULT = t;
+				System.out.println("Reduce a clase por tipo_coleccion");	:};
+tipo 	::= ENTERO
+			{:	RESULT = Tipo.INT;
+			:}
+			| BOOLEAN
+			| FLOAT
+			;
+
+tipo_coleccion	::= ARRAY:a tipo:t LEFT_CORCHETE:lc INT:i RIGHT_CORCHETE:rc
+			;
+
+identificadores	::= ID_VAR:i
+			{:	RESULT = i;
+				System.out.println("Reduce a identificadores por ID_VAR");	:}
+			| ID_VAR:i COMA:c identificadores:id
+			{:	RESULT = i + c + id;
+					:};
+
+funciones	::= funcion:f funciones:ff| ;
+
+funcion		::= FUNCTION:f clase:c ID_VAR:i LEFT_PARENTESIS:lp ;
+                   
+			
+
+parametros	::= parametro:p resto_parametros:r
+			|
+			;
+
+resto_parametros	::= SEMI:s parametro:p resto_parametros:r
+			|
+			;
+
+parametro	::= tipo:t ID_VAR:i
+			;
+
+declaraciones_funcion	::= declaracion_funcion:d declaraciones_funcion:dd
+			|
+			;
+
+declaracion_funcion	::= tipo:tu ID_VAR:i SEMI:s
+			;
+
+sentencias	::= sentencia:s
+			{:	RESULT = s;
+				System.out.println("Reduce a sentencias por sentencia");	:}
+			| sentencia:s sentencias:ss
+			{:	RESULT = s + ss;
+				System.out.println("Reduce a sentencias por sentencia sentencias");	:};
+
+sentencia	::= sentencia_simple:ss SEMI:s
+			{:	RESULT = ss + s;
+				System.out.println("Reduce a sentencia por sentencia_simple SEMI");	:}
+			| estructura_control:ec
+			{:	RESULT = ec;
+				System.out.println("Reduce a sentencia por estructura_control");	:};
+
+sentencia_simple	::= asignacion:a
+			{:	RESULT = a;
+				System.out.println("Reduce a sentencia_simple por asignacion");	:}
+				| lectura:l
+			
+				| escritura:e
+			
+				| retorno:r
+				;
+
+asignacion	::= ID_VAR:i ASIGNACION:a exp:e
+			{:	RESULT = i + a + e;
+				Tipo tipo = null;
+
+				if(tablaSimbolos.containsKey(i)){
+					tipo = tablaSimbolos.get(i).getTipo();
+                    EscritorFichero.escribir("\npop dword eax\nmov dword [_"+i+"],eax\n");
+				}else{
+					System.out.println("Error (fila "+(ileft+1)+",columna "+(iright+1)+"): la variable: "+ i + " no ha sido declarada");
+					System.exit(0);
+				}
+				
+				if(tipo != e){
+					System.out.println("Error (fila "+(aleft+1)+",columna "+(aright+1)+"): los tipos de ambos lados de la asignacion no corresponden: a 	izquierda: "
+							+ tipo + " a derecha: " + e);
+					System.exit(0);
+				}
+
+				System.out.println("Reduce a asignacion por "+i+ a + "exp");	:}
+			| elemento_vector:ev ASIGNACION:a exp:e
+			{:	if(ev != e){
+					System.out.println("Error (fila "+(aleft+1)+",columna "+(aright+1)+"): los tipos de ambos lados de la asignacion no corresponden: a izquierda: "
+							+ ev + " a derecha: " + e);
+					System.exit(0);
+				}
+                                EscritorFichero.escribir("\npop dword eax \npop dword ebx \nmov dword ebx,[__auxElemVector] \nmov dword [ebx],eax");
+                                RESULT = ev + a + e;
+				System.out.println("Reduce a asignacion por elemento_vector ASIGNACION exp");	:};
+
+elemento_vector	::= ID_VAR:i LEFT_CORCHETE:lc exp:e RIGHT_CORCHETE:rc
+			;
+
+estructura_control	::= condicional:c
+			{:	RESULT = c;
+				System.out.println("Reduce a estructura_control por condicional");	:}
+				| bucle:b
+			{:	RESULT = b;
+				System.out.println("Reduce a estructura_control por bucle");	:};
+
+condicional     ::= condicionalParcial:cp
+                    {: Integer cuenta = pilaIf.pop();
+                        EscritorFichero.escribir("fin_condicional_"+cuenta+": \nppio_else_"+cuenta+": \n");
+                        RESULT = cp; :}
+                    | condicionalParcial:cp ELSE:e
+                    {: Integer cuenta = pilaIf.pop();
+                        EscritorFichero.escribir("ppio_else_"+cuenta+" :");
+                        pilaIf.push(cuenta);
+                    :} LEFT_LLAVE:ll2 sentencias:s2 RIGHT_LLAVE:rl2
+                    {:
+                        EscritorFichero.escribir("fin_condicional_"+pilaIf.pop()+": \n");
+                        RESULT = cp + e + ll2 + s2 + rl2;
+                    :};
+
+condicionalParcial::= IF:i LEFT_PARENTESIS:lp exp:ex RIGHT_PARENTESIS:rp {:
+                        EscritorFichero.escribir("condicional_"+contadorIf+": pop dword eax \nmov dword ebx,0 \ncmp eax,ebx "
+                                        +"\nje near ppio_else_"+contadorIf+ "\n");
+                        pilaIf.push(new Integer(contadorIf));
+                        contadorIf++;
+                        :} LEFT_LLAVE:ll1 sentencias:s1 RIGHT_LLAVE:rl1
+			{:	if(ex != Tipo.BOOLEAN){
+					System.out.println("Error (fila "+(exleft+1)+",columna "+(exright+1)+"): la expresion del condicional es incorrecta. Se espera: BOOLEAN, se encuentra: "+ex);
+					System.exit(0);
+				}
+                                Integer cuenta = pilaIf.pop();
+                                EscritorFichero.escribir("jmp near fin_condicional_"+cuenta);
+                                pilaIf.push(cuenta);
+				RESULT = i + lp + ex + rp + ll1 + s1 + rl1;
+				System.out.println("Reduce a condicional por IF ELSE");	:};
+
+bucle		::= WHILE:w 
+                    LEFT_PARENTESIS:lp exp:e RIGHT_PARENTESIS:r
+                   
+                    LEFT_LLAVE:ll sentencias:s RIGHT_LLAVE:rl
+			
+                    | FOR:f LEFT_PARENTESIS:lp ID_VAR:i PUNTOS:p ID_VAR:a RIGHT_PARENTESIS:rp
+                    
+                     LEFT_LLAVE:ll sentencias:s RIGHT_LLAVE:rl ;
+
+lectura		::= SCANF:s ID_VAR:i
+			;
+
+escritura	::= CPRINTF:c ID_VAR:i
+			
+			|CPRINTF:c elemento_vector:ev
+			
+			| PRINTF:p exp:e
+			;
+
+retorno		::= RETURN:r exp:e
+			;
+
+constante	::= CTE_BOOLEANA:b
+			| INT:i
+			{:	EscritorFichero.escribir("push dword "+i+"\n");
+				RESULT = Tipo.INT;
+				System.out.println("Reduce a constante por INT");	:}
+			| cte_real:r
+			;
+
+cte_real	::= REAL:r
+			
+		| REAL_SIN_INT:r
+			
+		| REAL_SIN_DEC:r
+			;
+
+exp	::= exp:e1 MAS:m exp:e2
+			{:	if(e1 == Tipo.INT && e2 == Tipo.INT){
+					EscritorFichero.escribir("pop dword eax \npop dword ebx \nadd dword eax,ebx \npush dword eax\n");
+					RESULT = Tipo.INT;
+				}else{
+					System.out.println("Error (fila "+(mleft+1)+",columna "+(mright+1)+"): los tipos de la expresion suma no son validos.");
+					System.exit(0);
+				}
+				System.out.println("Reduce a exp por exp MAS exp");	:}
+		| exp:e1 MENOS:m exp:e2
+			{:	if(e1 == Tipo.INT && e2 == Tipo.INT){
+					EscritorFichero.escribir("pop dword ebx \npop dword eax \nsub dword eax,ebx \npush dword eax\n");
+					RESULT = Tipo.INT;
+                                }else{
+					System.out.println("Error (fila "+(mleft+1)+",columna "+(mright+1)+"): los tipos de la expresion resta no son validos");
+					System.exit(0);
+				}
+				System.out.println("Reduce a exp por exp MENOS exp");	:}
+		| exp:e1 ENTRE:e exp:e2
+			{:	if(e1 == Tipo.INT && e2 == Tipo.INT){
+                                        EscritorFichero.escribir("pop dword ebx \npop dword eax \ncdq \nidiv dword ebx \npush dword eax\n");
+                        		RESULT = Tipo.INT;
+                                } else{
+					System.out.println("Error (fila "+(eleft+1)+",columna "+(eright+1)+"): los tipos de la expresion division no son validos");
+					System.exit(0);
+				}
+				System.out.println("Reduce a exp por exp ENTRE exp");	:}
+		| exp:e1 POR:p exp:e2
+			{:	if(e1 == Tipo.INT && e2 == Tipo.INT){
+                                        EscritorFichero.escribir("pop dword eax \npop dword ebx \nimul dword eax,ebx \npush dword eax\n");
+                        		RESULT = Tipo.INT;
+                                } else{
+					System.out.println("Error (fila "+(pleft+1)+",columna "+(pright+1)+"): los tipos de la expresion multiplicacion no son validos");
+					System.exit(0);
+				}
+				System.out.println("Reduce a exp por exp POR exp");	:}
+		| MENOS:m exp:e
+			
+		| exp:e1 AND:a exp:e2
+			
+		| exp:e1 OR:o exp:e2
+			
+		| NOT:n exp:e
+			
+		| ID_VAR:i
+			{:	if(tablaSimbolos.containsKey(i)) {
+					RESULT = tablaSimbolos.get(i).getTipo();
+                                        EscritorFichero.escribir("\npush dword _"+i+"\npop dword eax\nmov dword eax,[eax]\npush dword eax\n");
+				} else {
+					System.out.println("Error (fila "+(ileft+1)+",columna "+(iright+1)+"): la variable '"+ i +"' no ha sido declarada");
+					System.exit(0);
+				}
+				System.out.println("Reduce a exp por ID_VAR");	:}
+		| constante:c
+			{:	
+                                RESULT = c;
+				System.out.println("Reduce a exp por constante");	:}
+			
+		| LEFT_PARENTESIS:lp exp:e RIGHT_PARENTESIS:rp
+			{:	
+                                RESULT = e;
+				System.out.println("Reduce a exp por LEFT_PARENTESIS exp RIGHT_PARENTESIS");	:}
+		| comparacion:c
+			{:	
+                                RESULT = Tipo.BOOLEAN;
+				System.out.println("Reduce a exp por comparacion");	:}
+		| elemento_vector:ev
+			
+					
+		| ID_VAR:i LEFT_PARENTESIS:lp lista_expresiones:le RIGHT_PARENTESIS:rp
+			;
+
+lista_expresiones	::= exp:e resto_lista_expresiones:rle
+			|
+			;
+
+resto_lista_expresiones	::= COMA:c exp:e resto_lista_expresiones:rle
+			|
+			;
+
+comparacion	::= exp:e1 EQUALS:eq exp:e2
+			{:	if(e1!=e2){
+					System.out.println("Error (fila "+(eqleft+1)+",columna "+(eqright+1)+"): los tipos de ambos lados de la comparacion no corresponden: a izquierda: "
+							+ e1 + " a derecha: " + e2);
+					System.exit(0);
+				}       
+                                EscritorFichero.escribir("pop dword eax \npop dword ebx \ncmp eax,ebx "
+                                            +"\nje near igual_"+contadorIgual+" \npush dword 0 \njmp fin_igual_"+contadorIgual
+                                            +"\nigual_"+contadorIgual+": push dword 1 \n fin_igual_"+contadorIgual+": \n");
+                         
+                                contadorIgual++;
+                                RESULT = e1 + eq + e2;
+                                System.out.println("Reduce a exp por exp EQUALS exp");	:}
+			| exp:e1 NOT_EQUALS:neq exp:e2
+			{:	if(e1!=e2){
+					System.out.println("Error (fila "+(neqleft+1)+",columna "+(neqright+1)+"): los tipos de ambos lados de la comparacion no corresponden: a izquierda: "
+							+ e1 + " a derecha: " + e2);
+					System.exit(0);
+				}
+                             
+                                    EscritorFichero.escribir("pop dword eax \npop dword ebx \ncmp eax,ebx "
+                                            +"\njne near distinto_"+contadorDistinto+" \npush dword 0 \njmp fin_distinto_"+contadorDistinto
+                                            +"\ndistinto_"+contadorDistinto+": push dword 1 \n fin_distinto_"+contadorDistinto+": \n");
+                              
+                                contadorDistinto++;
+                                RESULT = e1 + neq + e2;
+                                System.out.println("Reduce a exp por exp NOT_EQUALS exp");:}
+			| exp:e1 LESS_EQUALS:le exp:e2
+			
+			| exp:e1 GREATER_EQUALS:ge exp:e2
+			
+			| exp:e1 LESS:l exp:e2
+			
+			| exp:e1 GREATER:g exp:e2
+			;

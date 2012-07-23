@@ -3,7 +3,9 @@ Creator: Jose Ruiz Jimenez - joseruizjimenez@gmail.com
 [English]
 This is a little Compiler example using JFlex and CUP made as an University
 assignment (Universidad San Pablo CEU - Procesadores de Lenguaje)
+User_guide in spanish.
 
-[Español]
-Esto es un pequeño ejemplo de un Compilador empleando JFlex y CUP para
+[EspaÃ±ol]
+Esto es un pequeÃ±o ejemplo de un Compilador empleando JFlex y CUP para
 un ejercicio de la universidad (San Pablo CEU - Procesadores de Lenguaje)
+Consulte la guia de usuario: user_guide.pdf

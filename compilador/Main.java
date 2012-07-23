@@ -1,37 +1,36 @@
-package pdlcompilerproyect;
+
+package compilador;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
+
 /**
- * Proyecto PDL - Compilador
- * 
- * @version 2
- * @author Jose Ruiz Jimenez
+ *
+ * Proyecto Final PDL: TurboConpilar v4.73 REV: 2 
+ * @author Jose Ruiz Jimenez, Pablo Calleja Ibañez, Jesus Mayor Marquez, Luis Alberto Lalueza Mayordomo
  */
 public class Main {
-    private static final String FILE_TO_PARSE = "aux_files\\entrada.txt";
-
     /**
-     * Lee de FILE_TO_PARSE el documento a parsear (y compilar)
-     * 
      * @param args the command line arguments
      */
     public static void main(String[] args){
         try{
-            parser analizador = new parser(new AnalizadorMorfologico(
-                    new FileInputStream(new File(FILE_TO_PARSE))));
+            if(args.length<1){
+                System.out.println("No encuentra ningun parametro. El programa cerrara");
+                System.exit(0);
+            }
+            parser analizador = new parser (new AnalizadorMorfologico (new FileInputStream (new File(args[0]))));
             analizador.parse();
-        } catch(FileNotFoundException e){
+        }catch(FileNotFoundException e){
             System.out.println("No se ha podido leer el fichero");
-        } catch(NullPointerException e){
+        }catch(NullPointerException e){
             System.out.println("No se ha creado el analizador");
             e.printStackTrace();
-        } catch(Exception e){
+        }catch(Exception e){
             System.out.println("Se ha producido una excepcion en la ejecucion del Parser");
             e.printStackTrace();
         }
     }
-
 }
